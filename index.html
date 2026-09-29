@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>简单签到系统</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 48px 20px;
+      background: #f3f6fa;
+      color: #213047;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    main { max-width: 760px; margin: auto; }
+    .tag { color: #52637a; font-size: 14px; }
+    h1 { margin: 12px 0; font-size: 32px; }
+    .intro { color: #52637a; line-height: 1.8; }
+    .card {
+      margin-top: 24px;
+      padding: 28px;
+      background: white;
+      border: 1px solid #dce3ed;
+      border-radius: 14px;
+    }
+    label { display: block; margin-bottom: 10px; font-weight: bold; }
+    .input-row { display: flex; gap: 12px; }
+    input, button { font: inherit; border-radius: 8px; }
+    input { min-width: 0; flex: 1; padding: 12px; border: 1px solid #899bb1; }
+    button {
+      padding: 12px 24px;
+      border: none;
+      background: #215cd2;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background: #1647a9; }
+    input:focus-visible, button:focus-visible { outline: 3px solid #85b1ff; outline-offset: 3px; }
+    #message { min-height: 24px; margin: 14px 0 0; line-height: 1.6; color: #285d48; }
+    #message.error { color: #af2531; }
+    .list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h2 { margin: 0; font-size: 20px; }
+    #count { font-size: 14px; color: #52637a; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: left; }
+    th, td { padding: 14px 8px; border-bottom: 1px solid #e4e9f1; }
+    th { color: #52637a; font-size: 14px; }
+    td { overflow-wrap: anywhere; }
+    .empty { text-align: center; color: #52637a; padding: 28px 8px; }
+    .note { margin-top: 20px; color: #52637a; font-size: 13px; line-height: 1.8; }
+    @media (max-width: 520px) {
+      body { padding: 28px 16px; }
+      .card { padding: 20px 16px; }
+      .input-row { flex-direction: column; }
+      th, td { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="tag">软件工程导论 · 实验一</div>
+    <h1>简单签到系统</h1>
+    <p class="intro">输入姓名或测试昵称，记录本次签到。</p>
+
+    <section class="card" aria-label="签到表单">
+      <form id="checkin-form">
+        <label for="name">姓名 / 测试昵称</label>
+        <div class="input-row">
+          <input id="name" name="name" placeholder="例如：测试同学 A" maxlength="20" required>
+          <button type="submit">签到</button>
+        </div>
+      </form>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card" aria-labelledby="records-title">
+      <div class="list-heading">
+        <h2 id="records-title">签到记录</h2>
+        <span id="count">共 0 条</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">序号</th><th scope="col">姓名 / 昵称</th><th scope="col">签到时间</th></tr></thead>
+          <tbody id="records"></tbody>
+        </table>
+      </div>
+      <p class="note">记录仅保存在当前浏览器，换设备不会同步。签到时间以本机时间为准。</p>
+    </section>
+  </main>
+
+  <script>
+    // 基础版：一次点击生成一条记录，暂不限制同名重复签到。
+    const storageKey = "simple-checkin-records-v1";
+    const form = document.querySelector("#checkin-form");
+    const nameInput = document.querySelector("#name");
+    const message = document.querySelector("#message");
+    const tableBody = document.querySelector("#records");
+    const count = document.querySelector("#count");
+    let records = [];
+
+    function showMessage(text, isError = false) {
+      message.textContent = text;
+      message.classList.toggle("error", isError);
+    }
+
+    // 从当前浏览器恢复记录；存储不可用时仍可在当前页面演示。
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      if (!Array.isArray(saved) || !saved.every(record =>
+        record && typeof record.name === "string" && typeof record.time === "string" &&
+        !Number.isNaN(Date.parse(record.time)))) {
+        throw new Error("记录格式无效");
+      }
+      records = saved;
+    } catch {
+      showMessage("无法读取已保存的记录，本次先从空列表开始。", true);
+    }
+
+    function renderRecords() {
+      tableBody.replaceChildren();
+      count.textContent = `共 ${records.length} 条`;
+      if (records.length === 0) {
+        const row = tableBody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 3;
+        cell.className = "empty";
+        cell.textContent = "暂无签到记录，完成第一次签到吧。";
+        return;
+      }
+      // 最新记录排在最上方；textContent 将输入作为文字显示。
+      [...records].reverse().forEach((record, index) => {
+        const row = tableBody.insertRow();
+        const values = [records.length - index, record.name,
+          new Date(record.time).toLocaleString("zh-CN", { hour12: false })];
+        values.forEach(value => { row.insertCell().textContent = value; });
+      });
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const name = nameInput.value.trim();
+      if (!name) {
+        showMessage("请先输入姓名或测试昵称。", true);
+        nameInput.focus();
+        return;
+      }
+      records.push({ name, time: new Date().toISOString() });
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(records));
+        showMessage(`${name}，签到成功！`);
+      } catch {
+        showMessage("本次签到已显示，但浏览器未能保存；关闭页面后可能丢失。", true);
+      }
+      renderRecords();
+      form.reset();
+      nameInput.focus();
+    });
+
+    renderRecords();
+  </script>
+</body>
+</html>
