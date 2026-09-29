@@ -1,1 +1,1 @@
-print("Hello, AI 编程！")
+print("不要让梦想埋没")
