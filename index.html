@@ -61,7 +61,7 @@
   <main>
     <div class="tag">软件工程导论 · 实验一</div>
     <h1>简单签到系统</h1>
-    <p class="intro">输入姓名或测试昵称，记录本次签到。</p>
+    <p class="intro">输入姓名或测试昵称，记录本次签到。每个昵称每天可签到一次。</p>
 
     <section class="card" aria-label="签到表单">
       <form id="checkin-form">
@@ -90,7 +90,7 @@
   </main>
 
   <script>
-    // 基础版：一次点击生成一条记录，暂不限制同名重复签到。
+    // 保留基础版的存储键，升级后继续读取已有签到记录。
     const storageKey = "simple-checkin-records-v1";
     const form = document.querySelector("#checkin-form");
     const nameInput = document.querySelector("#name");
@@ -102,6 +102,13 @@
     function showMessage(text, isError = false) {
       message.textContent = text;
       message.classList.toggle("error", isError);
+    }
+
+    // 按本机的本地日期判断“当天”，与页面显示的时间保持一致。
+    function hasCheckedInToday(recordList, name, now) {
+      const today = now.toDateString();
+      return recordList.some(record => record.name === name &&
+        new Date(record.time).toDateString() === today);
     }
 
     // 从当前浏览器恢复记录；存储不可用时仍可在当前页面演示。
@@ -145,7 +152,13 @@
         nameInput.focus();
         return;
       }
-      records.push({ name, time: new Date().toISOString() });
+      const now = new Date();
+      if (hasCheckedInToday(records, name, now)) {
+        showMessage(`${name} 今天已签到，请勿重复签到。`, true);
+        nameInput.focus();
+        return;
+      }
+      records.push({ name, time: now.toISOString() });
       try {
         localStorage.setItem(storageKey, JSON.stringify(records));
         showMessage(`${name}，签到成功！`);
