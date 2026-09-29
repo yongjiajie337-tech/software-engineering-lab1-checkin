@@ -2,6 +2,8 @@
 
 软件工程导论实验一的自建本地演示项目。目标是练习项目运行、Git 版本控制和 AI 辅助编程。
 
+公开仓库：[software-engineering-lab1-checkin](https://github.com/yongjiajie337-tech/software-engineering-lab1-checkin)
+
 ## 当前功能
 
 - 输入姓名或测试昵称，生成签到记录。
@@ -14,7 +16,14 @@
 
 ## 运行方法
 
-只需 Python 3 和浏览器，不需要安装第三方依赖。在本目录打开 PowerShell：
+只需 Python 3 和浏览器，不需要安装第三方依赖。尚未下载项目时，可先获取代码：
+
+```powershell
+git clone https://github.com/yongjiajie337-tech/software-engineering-lab1-checkin.git
+cd software-engineering-lab1-checkin
+```
+
+在项目目录打开 PowerShell：
 
 ```powershell
 python hello_ai.py
@@ -47,4 +56,4 @@ python -m http.server 8765 --bind 127.0.0.1
 
 用户提出实验目标和工具替代要求，Codex 生成基础代码并进行本地验证。2026-09-29，学生已亲自确认基础版鼠标点击签到成功、刷新后记录仍保留，选择新增“防止当天重复签到”，并在扩展后的首次签到、同日重复拦截、刷新后重复拦截三步人工复测中确认“符合预期”。代码阅读、最小程序人工运行等环节，待实际完成后继续记录。
 
-本地 Git 仓库已初始化，基础版提交为 `c532969`（`feat: add basic local check-in demo`）。当天防重功能在后续独立提交中保存，可通过 Git 对比前后变化。GitHub 托管尚待后续协作完成；完成托管后在此补充真实仓库链接。
+基础版提交为 `c532969`（`feat: add basic local check-in demo`），当天防重提交为 `82754e2`（`feat: prevent duplicate daily check-ins`），可通过 Git 对比前后变化。项目已推送至上方公开 GitHub 仓库的 `main` 分支；已实际执行 `git pull --ff-only`，当次结果为 `Already up to date.`。
